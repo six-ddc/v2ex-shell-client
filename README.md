@@ -33,11 +33,12 @@ Usage:
         q|quit: 退出
 ```
 
-![image](https://github.com/six-ddc/v2ex-shell-client/raw/master/capture.jpg)
+![image](https://raw.githubusercontent.com/six-ddc/v2ex-shell-client/master/capture.png)
 
 
 ### TODO：
 
+* 翻页支持
 * 登录支持
 * 回复功能
 * 常用节点选择

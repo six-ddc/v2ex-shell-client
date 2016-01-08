@@ -118,7 +118,7 @@ _replies() {
 
 _sel() {
     case "$MODE" in
-        hot | latest | node)
+        hot | late | node)
             _replies $1
             ;;
         *)
@@ -129,7 +129,7 @@ _sel() {
 _usage() {
     printf "Usage:\n"
     printf "\thot: 热门主题\n"
-    printf "\tlatest: 最新主题\n"
+    printf "\tlate: 最新主题\n"
     printf "\tnode <nodename>: 获取节点的主题\n"
     printf "\t<num>: 获取指定主题的回复列表\n"
     printf "\thelp: 查看帮助\n"
@@ -149,8 +149,12 @@ do
         q | quit)
             break
             ;;
-        hot | latest)
-            _topics topics $op
+        late)
+            _topics topics latest
+            MODE=$op
+            ;;
+        hot)
+            _topics topics hot
             MODE=$op
             ;;
         node)
