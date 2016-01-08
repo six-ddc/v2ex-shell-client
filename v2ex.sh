@@ -67,14 +67,26 @@ _topics() {
 }
 
 _date() {
-    if [ `date +%Y` -eq `date -r $1 +%Y` ]; then
-        if [ `date +%m` -eq `date -r $1 +%m` ] && [ `date +%d` -eq `date -r $1 +%d` ]; then
-            RET=`date -r $1 +"%H:%M:%S"`
+    if [ `uname` = "Darwin" ]; then
+        if [ `date +%Y` -eq `date -r $1 +%Y` ]; then
+            if [ `date +%m` -eq `date -r $1 +%m` ] && [ `date +%d` -eq `date -r $1 +%d` ]; then
+                RET=`date -r $1 +"%H:%M:%S"`
+            else
+                RET=`date -r $1 +"%m-%d %H:%M:%S"`
+            fi
         else
-            RET=`date -r $1 +"%m-%d %H:%M:%S"`
+            RET=`date -r $1 +"%Y-%m-%d %H:%M:%S"`
         fi
     else
-        RET=`date -r $1 +"%Y-%m-%d %H:%M:%S"`
+        if [ `date +%Y` -eq `date -d @$1 +%Y` ]; then
+            if [ `date +%m` -eq `date -d @$1 +%m` ] && [ `date +%d` -eq `date -d @$1 +%d` ]; then
+                RET=`date -d @$1 +"%H:%M:%S"`
+            else
+                RET=`date -d @$1 +"%m-%d %H:%M:%S"`
+            fi
+        else
+            RET=`date -d @$1 +"%Y-%m-%d %H:%M:%S"`
+        fi
     fi
 }
 
@@ -100,7 +112,7 @@ _replies() {
         _date $created
         created=$RET
         id=`jq -r ".[$i].member.id" $tmpfile`
-        printf "%3dL. $blue$member$reset $pink$content$reset $created\n" "$(($i+1))"
+        printf "%3dL. $pink$member$reset $cyan$content$reset $created\n" "$(($i+1))"
     done
 }
 
@@ -124,7 +136,7 @@ _usage() {
     printf "\tq|quit: 退出\n"
 }
 
-while True
+while true
 do
     UPMODE=`echo $MODE | tr "[:lower:]" "[:upper:]"`
     printf "$UPMODE # "

@@ -33,6 +33,8 @@ Usage:
         q|quit: 退出
 ```
 
+![image](https://github.com/six-ddc/v2ex-shell-client/raw/master/capture.jpg)
+
 
 ### TODO：
 
