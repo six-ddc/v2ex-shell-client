@@ -33,7 +33,12 @@ Usage:
         q|quit: 退出
 ```
 
-![image](https://raw.githubusercontent.com/six-ddc/v2ex-shell-client/master/capture.png)
+![image](https://raw.githubusercontent.com/six-ddc/v2ex-shell-client/master/capture/a.png)
+
+主题的回复内容将单独显示，而不影响主题列表
+
+![image](https://raw.githubusercontent.com/six-ddc/v2ex-shell-client/master/capture/b.png)
+![image](https://raw.githubusercontent.com/six-ddc/v2ex-shell-client/master/capture/c.png)
 
 
 ### TODO：
