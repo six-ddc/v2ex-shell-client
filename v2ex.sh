@@ -1,3 +1,5 @@
+#!/bin/bash
+
 reset="\e[0m"
 
 red="\e[0;31m"
