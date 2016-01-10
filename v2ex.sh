@@ -31,9 +31,6 @@ RRAY_TITLE=()
 ARRAY_CONTENT=()
 
 _topics() {
-    ARRAY=()
-    ARRAY_TITLE=()
-    ARRAY_CONTENT=()
     if [ "$1" = "topics" ]; then
         tmpfile="/tmp/ddc.v2ex.topics.$2.json"
         curl -s -o $tmpfile "https://www.v2ex.com/api/topics/$2.json"
@@ -51,6 +48,9 @@ _topics() {
     if ! test $LENGTH; then
         return
     fi
+    ARRAY=()
+    ARRAY_TITLE=()
+    ARRAY_CONTENT=()
     for((i = 0; i < $LENGTH; i++))
     do
         # 替换百分号可能引起的printf输出异常，只能在jq后解析，而不能单独通过echo解析
@@ -101,7 +101,7 @@ _replies() {
         return
     fi
     replies_tmpfile="/tmp/ddc.v2ex.replies.tmp"
-    printf "${ARRAY_TITLE[$1]}\n${ARRAY_CONTENT[$1]}\n" > $replies_tmpfile
+    printf "${ARRAY_TITLE[$1]}\n${green}${ARRAY_CONTENT[$1]}${reset}\n" > $replies_tmpfile
     tmpfile="/tmp/ddc.v2ex.replies.json"
     curl -s -o $tmpfile "https://www.v2ex.com/api/replies/show.json?topic_id=$id"
     LENGTH=`cat $tmpfile | jq ". | length"`
@@ -118,12 +118,13 @@ _replies() {
         created=$RET
         id=`jq -r ".[$i].member.id" $tmpfile`
         if [ $thanks != "0" ]; then
-            printf "\n%3dL. $pink$member$reset $cyan$created$reset ♥️ $RED$thanks$reset\n$content\n" "$(($i+1))" >> $replies_tmpfile
+            printf "\n${blue}%3dL${reset}. $pink$member$reset $cyan$created$reset ♥️ $RED$thanks$reset\n${green}$content${reset}\n" "$(($i+1))" >> $replies_tmpfile
         else
-            printf "\n%3dL. $pink$member$reset $cyan$created$reset\n$content\n" "$(($i+1))" >> $replies_tmpfile
+            printf "\n${blue}%3dL${reset}. $pink$member$reset $cyan$created$reset\n${green}$content${reset}\n" "$(($i+1))" >> $replies_tmpfile
         fi
     done
-    less -ms $replies_tmpfile
+    # 只有加上-r选项，多行文本的ascii color才会被当作一行处理显示，但是却有回滚时颜色不连续的异常，属于less的bug，暂不能解决。
+    less -rms $replies_tmpfile
 }
 
 _sel() {
@@ -173,7 +174,7 @@ do
                 _topics node $node
                 MODE=node
             else
-                _usage
+                printf "${red}使用node <nodename>格式${reset}\n"
             fi
             ;;
         help)
