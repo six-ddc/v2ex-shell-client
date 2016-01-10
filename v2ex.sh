@@ -53,16 +53,14 @@ _topics() {
     fi
     for((i = 0; i < $LENGTH; i++))
     do
-        title=`jq -r ".[$i].title" $tmpfile`
-        content=`jq -r ".[$i].content" $tmpfile`
-        # 替换百分号可能引起的printf输出异常　
-        content=`echo $content | sed "s/\%/\%\%/g"`
+        # 替换百分号可能引起的printf输出异常，只能在jq后解析，而不能单独通过echo解析
+        title=`jq -r ".[$i].title" $tmpfile | sed "s/\%/\%\%/g"`
+        content=`jq -r ".[$i].content" $tmpfile | sed "s/\%/\%\%/g"`
         member=`jq -r ".[$i].member.username" $tmpfile`
-        node_title=`jq -r ".[$i].node.title" $tmpfile`
+        node_title=`jq -r ".[$i].node.title" $tmpfile | sed "s/\%/\%\%/g"`
         replies=`jq -r ".[$i].replies" $tmpfile`
-        id=`jq -r ".[$i].id" $tmpfile`
         title="$blue$node_title$reset $green$title$reset $pink$member$reset($cyan$replies$reset)"
-        title=`echo $title | sed "s/\%/\%\%/g"`
+        id=`jq -r ".[$i].id" $tmpfile`
         ARRAY[$(($i+1))]=$id
         ARRAY_TITLE[$(($i+1))]="$title"
         ARRAY_CONTENT[$(($i+1))]="$content"
@@ -103,7 +101,7 @@ _replies() {
         return
     fi
     replies_tmpfile="/tmp/ddc.v2ex.replies.tmp"
-    printf "${ARRAY_TITLE[$1]}\n$cyan${ARRAY_CONTENT[$1]}$reset\n" > $replies_tmpfile
+    printf "${ARRAY_TITLE[$1]}\n${ARRAY_CONTENT[$1]}\n" > $replies_tmpfile
     tmpfile="/tmp/ddc.v2ex.replies.json"
     curl -s -o $tmpfile "https://www.v2ex.com/api/replies/show.json?topic_id=$id"
     LENGTH=`cat $tmpfile | jq ". | length"`
@@ -112,15 +110,13 @@ _replies() {
     fi
     for((i = 0; i < $LENGTH; i++))
     do
-        content=`jq -r ".[$i].content" $tmpfile`
-        # 替换百分号可能引起的printf输出异常　
-        content=`echo $content | sed "s/\%/\%\%/g"`
+        content=`jq -r ".[$i].content" $tmpfile | sed "s/\%/\%\%/g"`
         member=`jq -r ".[$i].member.username" $tmpfile`
         created=`jq -r ".[$i].created" $tmpfile`
         _date $created
         created=$RET
         id=`jq -r ".[$i].member.id" $tmpfile`
-        printf "%3dL. $pink$member$reset $cyan$content$reset $created\n" "$(($i+1))" >> $replies_tmpfile
+        printf "%3dL. $pink$member$reset $content $cyan$created$reset\n" "$(($i+1))" >> $replies_tmpfile
     done
     less -ms $replies_tmpfile
 }
