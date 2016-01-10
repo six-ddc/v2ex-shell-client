@@ -93,6 +93,39 @@ _date() {
     fi
 }
 
+_categories() {
+    cate_tmpfile="/tmp/ddc.v2ex.cate.tmp"
+    curl -s -o $cate_tmpfile "https://www.v2ex.com/?tab=$1"
+    # grep的文件和重定向不能是同一个文件
+    grep '<span class="item_title">' $cate_tmpfile > $cate_tmpfile.grep
+    reg_id='<a href="/t/([0-9]+)'
+    ARRAY=()
+    ARRAY_TITLE=()
+    ARRAY_CONTENT=()
+    i=1
+    while read line
+    do
+        if [[ $line =~ $reg_id ]]; then
+            id=${BASH_REMATCH[1]}
+            curl -s -o $cate_tmpfile "https://www.v2ex.com/api/topics/show.json?id=$id"
+            title=`jq -r ".[0].title" $cate_tmpfile | sed "s/\%/\%\%/g"`
+            content=`jq -r ".[0].content" $cate_tmpfile | sed "s/\%/\%\%/g"`
+            member=`jq -r ".[0].member.username" $cate_tmpfile`
+            node_title=`jq -r ".[0].node.title" $cate_tmpfile | sed "s/\%/\%\%/g"`
+            replies=`jq -r ".[0].replies" $cate_tmpfile`
+            title="$blue$node_title$reset $green$title$reset $pink$member$reset($cyan$replies$reset)"
+            ARRAY[$i]=$id
+            ARRAY_TITLE[$i]="$title"
+            ARRAY_CONTENT[$i]="$content"
+            printf "%2d. $title\n" "$i"
+            i=$(($i+1))
+            if [ $i -gt 10 ]; then
+                break
+            fi
+        fi    
+    done < $cate_tmpfile.grep
+}
+
 _replies() {
     id=${ARRAY[$1]}
     if ! test $id; then
@@ -129,7 +162,7 @@ _replies() {
 
 _sel() {
     case "$MODE" in
-        hot | late | node)
+        hot | late | node | cate)
             _replies $1
             ;;
         *)
@@ -141,6 +174,7 @@ _usage() {
     printf "Usage:\n"
     printf "\thot: 热门主题\n"
     printf "\tlate: 最新主题\n"
+    printf "\tcate <tech|creative|play|apple|jobs|deals|city|qna|hot|all|r2|nodes|members>: 获取指定分类的主题\n"
     printf "\tnode <nodename>: 获取节点的主题\n"
     printf "\t<num>: 获取指定主题的回复列表\n"
     printf "\thelp: 查看帮助\n"
@@ -166,19 +200,32 @@ do
             ;;
         hot)
             _topics topics hot
-            MODE=$op
+            mode=$op
+            ;;
+        cate)
+            name=`echo $data | cut -d " " -f 2`
+            if [ $name != $op ]; then
+                _categories $name
+                MODE=$op
+            else
+                printf "${red}使用cate <catename>格式${reset}\n"
+            fi
             ;;
         node)
             node=`echo $data | cut -d " " -f 2`
             if [ $node != $op ]; then
                 _topics node $node
-                MODE=node
+                MODE=$op
             else
                 printf "${red}使用node <nodename>格式${reset}\n"
             fi
             ;;
         help)
             _usage
+            ;;
+        test)
+            # _categories all
+            # exit 0
             ;;
         *)
             if [ $op -eq $op ] 2>/dev/null ; then
