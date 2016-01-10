@@ -113,10 +113,15 @@ _replies() {
         content=`jq -r ".[$i].content" $tmpfile | sed "s/\%/\%\%/g"`
         member=`jq -r ".[$i].member.username" $tmpfile`
         created=`jq -r ".[$i].created" $tmpfile`
+        thanks=`jq -r ".[$i].thanks" $tmpfile`
         _date $created
         created=$RET
         id=`jq -r ".[$i].member.id" $tmpfile`
-        printf "%3dL. $pink$member$reset $content $cyan$created$reset\n" "$(($i+1))" >> $replies_tmpfile
+        if [ $thanks != "0" ]; then
+            printf "\n%3dL. $pink$member$reset $cyan$created$reset ♥️ $RED$thanks$reset\n$content\n" "$(($i+1))" >> $replies_tmpfile
+        else
+            printf "\n%3dL. $pink$member$reset $cyan$created$reset\n$content\n" "$(($i+1))" >> $replies_tmpfile
+        fi
     done
     less -ms $replies_tmpfile
 }
