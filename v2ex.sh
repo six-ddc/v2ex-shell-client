@@ -200,7 +200,7 @@ do
             ;;
         hot)
             _topics topics hot
-            mode=$op
+            MODE=$op
             ;;
         cate)
             name=`echo $data | cut -d " " -f 2`
