@@ -41,11 +41,10 @@ Usage:
 ![image](https://raw.githubusercontent.com/six-ddc/v2ex-shell-client/master/capture/b.png)
 ![image](https://raw.githubusercontent.com/six-ddc/v2ex-shell-client/master/capture/c.png)
 
-
 ### TODO：
 
 * 翻页支持
-* 登录支持
+* ~~登录支持~~
 * 回复功能
 * 常用节点选择
 * 排版优化
