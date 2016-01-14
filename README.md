@@ -26,7 +26,8 @@ sudo apt-get install jq
 NONE # help
 Usage:
         hot: 热门主题
-        latest: 最新主题
+        late: 最新主题
+        login: 登录
         node <nodename>: 获取节点的主题
         cate <tech|creative|play|apple|jobs|deals|city|qna|hot|all|r2|nodes|members>: 获取指定分类的主题
         <num>: 获取指定主题的回复列表

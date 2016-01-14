@@ -30,6 +30,8 @@ ARRAY=()
 RRAY_TITLE=()
 ARRAY_CONTENT=()
 
+cookie_file="cookie.jar"
+
 _topics() {
     if [ "$1" = "topics" ]; then
         tmpfile="/tmp/ddc.v2ex.topics.$2.json"
@@ -95,7 +97,7 @@ _date() {
 
 _categories() {
     cate_tmpfile="/tmp/ddc.v2ex.cate.tmp"
-    curl -s -o $cate_tmpfile "https://www.v2ex.com/?tab=$1"
+    curl -s -b $cookie_file -o $cate_tmpfile "https://www.v2ex.com/?tab=$1"
     # grep的文件和重定向不能是同一个文件
     grep '<span class="item_title">' $cate_tmpfile > $cate_tmpfile.grep
     reg_id='<a href="/t/([0-9]+)'
@@ -172,25 +174,31 @@ _sel() {
 
 _login() {
     tmpfile="/tmp/ddc.v2ex.signin.html"
-    cookie_file="/tmp/ddc.v2ex.cookie.txt"
     v2ex_sign='https://www.v2ex.com/signin'
     curl -s -o $tmpfile -c $cookie_file -b $cookie_file $v2ex_sign
     grep '登出' $tmpfile > /dev/null
-    if [ $? -eq 0 ]; then
-        printf "${green}已经登录...${reset}\n"
-    else
+    if [ $? != 0 ]; then
         once=`grep 'name="once"' $tmpfile`
         reg_once='value="([0-9]+)" name="once"'
         if [[ $once =~ $reg_once ]]; then
             once=${BASH_REMATCH[1]}
-            echo $once
-            curl -s -c $cookie_file -b $cookie_file -d "u=$1&p=$2&once=${once}&next=/" -e "$v2ex_sign" $v2ex_sign
+            printf "username: "
+            read username
+            printf "password: "
+            read -s password
+            printf "\n"
+            curl -s -o $tmpfile -c $cookie_file -b $cookie_file -d "u=${username}&p=${password}&once=${once}&next=/" -e "$v2ex_sign" $v2ex_sign
+            grep '用户名和密码无法匹配' $tmpfile > /dev/null
+            if [ $? -eq 0 ]; then
+                printf "${red}用户名或密码错误...${reset}\n"
+                return 1
+            fi
         else
             printf "${red}登录异常...${reset}\n"
             return 1
         fi
     fi
-    printf "获取用户信息...\n"
+    # printf "获取用户信息...\n"
     curl -s -o $tmpfile -b $cookie_file https://www.v2ex.com/
     user_info=`grep "/notifications" $tmpfile`
     reg_user='balance_area.*>[ ]*([0-9]+)[ ]*<img.*silver.*>[ ]*([0-9]+)[ ]*<img.*/notifications.*>(.+)</a></div>$'
@@ -198,6 +206,9 @@ _login() {
         silver=${BASH_REMATCH[1]}
         bronze=${BASH_REMATCH[2]}
         notifi=${BASH_REMATCH[3]}
+        if [[ notifi =~ [1-9] ]]; then
+            notifi="$notifi (https://www.v2ex.com/notifications)"
+        fi
         printf "$green$silver 银币 $bronze 铜币 $notifi$reset\n"
     else
         printf "${red}获取用户信息异常...${reset}\n"
@@ -214,7 +225,7 @@ _usage() {
     printf "Usage:\n"
     printf "\thot: 热门主题\n"
     printf "\tlate: 最新主题\n"
-    printf "\tlogin <username> <password>: 登录\n"
+    printf "\tlogin: 登录\n"
     printf "\tcate <tech|creative|play|apple|jobs|deals|city|qna|hot|all|r2|nodes|members>: 获取指定分类的主题\n"
     printf "\tnode <nodename>: 获取节点的主题\n"
     printf "\t<num>: 获取指定主题的回复列表\n"
@@ -259,15 +270,9 @@ do
             fi
             ;;
         login)
-            username=`echo $data | cut -d " " -f 2`
-            password=`echo $data | cut -d " " -f 3`
-            if [ $password != $op ]; then
-                _login $username $password
-                if [ $? -eq 0 ]; then
-                    MODE=$op
-                fi
-            else
-                printf "${red}使用login <username> <password>格式${reset}\n"
+            _login
+            if [ $? -eq 0 ]; then
+                MODE=$op
             fi
             ;;
         node)
