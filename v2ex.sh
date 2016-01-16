@@ -54,7 +54,7 @@ _topics() {
     else
         return
     fi
-    if [ `cat $TEMP_FILE | jq -r ". | type"` != "array" ]; then
+    if [ "`cat $TEMP_FILE | jq -r '. | type'`" != "array" ]; then
         printf "${red}节点名不存在，另外节点名称不支持中文，如酷工作请使用jobs${reset}\n"
         return
     fi
@@ -183,7 +183,7 @@ _replies() {
         fi
     done
     # 只有加上-r选项，多行文本的ascii color才会被当作一行处理显示，但是却有回滚时颜色不连续的异常，属于less的bug，暂不能解决。
-    less -rms $replies_tmpfile
+    less -rCm $replies_tmpfile
 }
 
 _sel() {
@@ -360,7 +360,7 @@ while true
 do
     UPMODE=`echo $MODE | tr "[:lower:]" "[:upper:]"`
     if test "$USER_NAME"; then
-        printf "($blue$USER_NAME$reset) $UPMODE # "
+        printf "($pink$USER_NAME$reset) $UPMODE # "
     else
         printf "$UPMODE # "
     fi
