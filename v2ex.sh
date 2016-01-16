@@ -345,13 +345,13 @@ _usage() {
 EOF
 }
 
-which jq > /dev/null
+type jq >/dev/null 2>/dev/null
 if [ $? != 0 ]; then
     printf "${red}脚本依赖的执行程序jq不存在，安装参考README.md${reset}\n"
     exit 1
 fi
 
-which http > /dev/null
+type http >/dev/null 2>/dev/null
 if [ $? == 0 ]; then
     HTTP=http
 fi
