@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # set -xe
 
@@ -54,11 +54,11 @@ _topics() {
     else
         return
     fi
-    if [ "`cat $TEMP_FILE | jq -r '. | type'`" != "array" ]; then
+    if [ "$(cat $TEMP_FILE | jq -r '. | type')" != "array" ]; then
         printf "${red}节点名不存在，另外节点名称不支持中文，如酷工作请使用jobs${reset}\n"
         return
     fi
-    LENGTH=`cat $TEMP_FILE | jq ". | length"`
+    LENGTH=$(cat $TEMP_FILE | jq ". | length")
     if ! test $LENGTH; then
         return
     fi
@@ -68,13 +68,13 @@ _topics() {
     for((i = 0; i < $LENGTH; i++))
     do
         # 替换百分号可能引起的printf输出异常，只能在jq后解析，而不能单独通过echo解析
-        title=`jq -r ".[$i].title" $TEMP_FILE | sed "s/\%/\%\%/g"`
-        content=`jq -r ".[$i].content" $TEMP_FILE | sed "s/\%/\%\%/g"`
-        member=`jq -r ".[$i].member.username" $TEMP_FILE`
-        node_title=`jq -r ".[$i].node.title" $TEMP_FILE | sed "s/\%/\%\%/g"`
-        replies=`jq -r ".[$i].replies" $TEMP_FILE`
+        title=$(jq -r ".[$i].title" $TEMP_FILE | sed "s/\%/\%\%/g")
+        content=$(jq -r ".[$i].content" $TEMP_FILE | sed "s/\%/\%\%/g")
+        member=$(jq -r ".[$i].member.username" $TEMP_FILE)
+        node_title=$(jq -r ".[$i].node.title" $TEMP_FILE | sed "s/\%/\%\%/g")
+        replies=$(jq -r ".[$i].replies" $TEMP_FILE)
         title="$blue$node_title$reset $green$title$reset $pink$member$reset($cyan$replies$reset)"
-        id=`jq -r ".[$i].id" $TEMP_FILE`
+        id=$(jq -r ".[$i].id" $TEMP_FILE)
         ARRAY[$(($i+1))]=$id
         ARRAY_TITLE[$(($i+1))]="$title"
         ARRAY_CONTENT[$(($i+1))]="$content"
@@ -84,25 +84,25 @@ _topics() {
 }
 
 _date() {
-    if [ `uname` = "Darwin" ]; then
-        if [ `date +%Y` -eq `date -r $1 +%Y` ]; then
-            if [ `date +%m` -eq `date -r $1 +%m` ] && [ `date +%d` -eq `date -r $1 +%d` ]; then
-                RET=`date -r $1 +"%H:%M:%S"`
+    if [ $(uname) = "Darwin" ]; then
+        if [ $(date +%Y) -eq $(date -r $1 +%Y) ]; then
+            if [ $(date +%m) -eq $(date -r $1 +%m) ] && [ $(date +%d) -eq $(date -r $1 +%d) ]; then
+                RET=$(date -r $1 +"%H:%M:%S")
             else
-                RET=`date -r $1 +"%m-%d %H:%M:%S"`
+                RET=$(date -r $1 +"%m-%d %H:%M:%S")
             fi
         else
-            RET=`date -r $1 +"%Y-%m-%d %H:%M:%S"`
+            RET=$(date -r $1 +"%Y-%m-%d %H:%M:%S")
         fi
     else
-        if [ `date +%Y` -eq `date -d @$1 +%Y` ]; then
-            if [ `date +%m` -eq `date -d @$1 +%m` ] && [ `date +%d` -eq `date -d @$1 +%d` ]; then
-                RET=`date -d @$1 +"%H:%M:%S"`
+        if [ $(date +%Y) -eq $(date -d @$1 +%Y) ]; then
+            if [ $(date +%m) -eq $(date -d @$1 +%m) ] && [ $(date +%d) -eq $(date -d @$1 +%d) ]; then
+                RET=$(date -d @$1 +"%H:%M:%S")
             else
-                RET=`date -d @$1 +"%m-%d %H:%M:%S"`
+                RET=$(date -d @$1 +"%m-%d %H:%M:%S")
             fi
         else
-            RET=`date -d @$1 +"%Y-%m-%d %H:%M:%S"`
+            RET=$(date -d @$1 +"%Y-%m-%d %H:%M:%S")
         fi
     fi
 }
@@ -131,11 +131,11 @@ _categories() {
             else
                 curl -s -o $TEMP_FILE "https://www.v2ex.com/api/topics/show.json?id=$id"
             fi
-            title=`jq -r ".[0].title" $TEMP_FILE | sed "s/\%/\%\%/g"`
-            content=`jq -r ".[0].content" $TEMP_FILE | sed "s/\%/\%\%/g"`
-            member=`jq -r ".[0].member.username" $TEMP_FILE`
-            node_title=`jq -r ".[0].node.title" $TEMP_FILE | sed "s/\%/\%\%/g"`
-            replies=`jq -r ".[0].replies" $TEMP_FILE`
+            title=$(jq -r ".[0].title" $TEMP_FILE | sed "s/\%/\%\%/g")
+            content=$(jq -r ".[0].content" $TEMP_FILE | sed "s/\%/\%\%/g")
+            member=$(jq -r ".[0].member.username" $TEMP_FILE)
+            node_title=$(jq -r ".[0].node.title" $TEMP_FILE | sed "s/\%/\%\%/g")
+            replies=$(jq -r ".[0].replies" $TEMP_FILE)
             title="$blue$node_title$reset $green$title$reset $pink$member$reset($cyan$replies$reset)"
             ARRAY[$i]=$id
             ARRAY_TITLE[$i]="$title"
@@ -145,7 +145,7 @@ _categories() {
             if [ $i -gt 10 ]; then
                 break
             fi
-        fi    
+        fi
     done < $TEMP_FILE.grep
 }
 
@@ -159,23 +159,23 @@ _replies() {
     replies_tmpfile="$TEMP_FILE.less"
     printf "${ARRAY_TITLE[$1]}\n${green}${ARRAY_CONTENT[$1]}${reset}\n" > $replies_tmpfile
     if test "$HTTP"; then
-        $HTTP -f GET "https://www.v2ex.com/api/replies/show.json?topic_id=$id" > $TEMP_FILE       
+        $HTTP -f GET "https://www.v2ex.com/api/replies/show.json?topic_id=$id" > $TEMP_FILE
     else
         curl -s -o $TEMP_FILE "https://www.v2ex.com/api/replies/show.json?topic_id=$id"
     fi
-    LENGTH=`cat $TEMP_FILE | jq ". | length"`
+    LENGTH=$(cat $TEMP_FILE | jq ". | length")
     if ! test $LENGTH; then
         return
     fi
     for((i = 0; i < $LENGTH; i++))
     do
-        content=`jq -r ".[$i].content" $TEMP_FILE | sed "s/\%/\%\%/g"`
-        member=`jq -r ".[$i].member.username" $TEMP_FILE`
-        created=`jq -r ".[$i].created" $TEMP_FILE`
-        thanks=`jq -r ".[$i].thanks" $TEMP_FILE`
+        content=$(jq -r ".[$i].content" $TEMP_FILE | sed "s/\%/\%\%/g")
+        member=$(jq -r ".[$i].member.username" $TEMP_FILE)
+        created=$(jq -r ".[$i].created" $TEMP_FILE)
+        thanks=$(jq -r ".[$i].thanks" $TEMP_FILE)
         _date $created
         created=$RET
-        id=`jq -r ".[$i].member.id" $TEMP_FILE`
+        id=$(jq -r ".[$i].member.id" $TEMP_FILE)
         if [ $thanks != "0" ]; then
             printf "\n${blue}%3dL${reset}. $pink$member$reset $cyan$created$reset ♥️ $RED$thanks$reset\n${green}$content${reset}\n" "$(($i+1))" >> $replies_tmpfile
         else
@@ -212,7 +212,7 @@ _login() {
     fi
     grep '登出' $TEMP_FILE > /dev/null
     if [ $? != 0 ]; then
-        once=`grep 'name="once"' $TEMP_FILE`
+        once=$(grep 'name="once"' $TEMP_FILE)
         reg_once='value="([0-9]+)" name="once"'
         if [[ $once =~ $reg_once ]]; then
             once=${BASH_REMATCH[1]}
@@ -242,7 +242,7 @@ _login() {
     else
         curl -s -o $TEMP_FILE -b $COOKIE_FILE https://www.v2ex.com/
     fi
-    user_info=`grep "bigger.*member" $TEMP_FILE`
+    user_info=$(grep "bigger.*member" $TEMP_FILE)
     reg_user='member.*>(.*)</a>'
     if [[ $user_info =~ $reg_user ]]; then
         USER_NAME="${BASH_REMATCH[1]}"
@@ -250,7 +250,7 @@ _login() {
         printf "${red}获取用户信息异常...${reset}\n"
         return 1
     fi
-    user_info=`grep "/notifications" $TEMP_FILE`
+    user_info=$(grep "/notifications" $TEMP_FILE)
     reg_user='balance_area.*>[ ]*([0-9]+)[ ]*<img.*silver.*>[ ]*([0-9]+)[ ]*<img.*/notifications.*>(.+)</a></div>$'
     if [[ $user_info =~ $reg_user ]]; then
         silver=${BASH_REMATCH[1]}
@@ -259,7 +259,7 @@ _login() {
         if [[ notifi =~ [1-9] ]]; then
             notifi="$notifi (https://www.v2ex.com/notifications)"
         fi
-        printf "$green$silver 银币 $bronze 铜币 $notifi$reset\n"
+        printf "$pink$USER_NAME$reset $green$silver 银币 $bronze 铜币 $notifi$reset\n"
     else
         # 只有银币的情况
         reg_user='balance_area.*>[ ]*([0-9]+)[ ]*<img.*silver.*>.*/notifications.*>(.+)</a></div>$'
@@ -269,7 +269,7 @@ _login() {
             if [[ notifi =~ [1-9] ]]; then
                 notifi="$notifi (https://www.v2ex.com/notifications)"
             fi
-            printf "$green$silver 银币 $notifi$reset\n"
+            printf "$pink$USER_NAME$reset $green$silver 银币 $notifi$reset\n"
         else
             printf "${red}获取用户信息异常...${reset}\n"
             return 1
@@ -294,7 +294,7 @@ _daily() {
     else
         curl -s -o $TEMP_FILE -b $COOKIE_FILE -c $COOKIE_FILE -e "https://www.v2ex.com" -A "$user_agent" $mission_daily
     fi
-    redeem=`grep 'mission/daily/redeem' $TEMP_FILE`
+    redeem=$(grep 'mission/daily/redeem' $TEMP_FILE)
     if ! test "$redeem"; then
         printf "${green}今天已经签到...${reset}\n"
         return 1
@@ -308,14 +308,11 @@ _daily() {
             curl -s -o $TEMP_FILE -b $COOKIE_FILE -c $COOKIE_FILE -e $mission_daily -A "$user_agent" "https://www.v2ex.com/mission/daily/redeem?once=${BASH_REMATCH[1]}"
             curl -s -o $TEMP_FILE -b $COOKIE_FILE -c $COOKIE_FILE -e $mission_daily -A "$user_agent" $mission_daily
         fi
-        echo "111"
         grep '每日登录奖励已领取' $TEMP_FILE > /dev/null
         if [ $? -eq 0 ]; then
-            echo "222"
-            cont=`grep '已连续登录' $TEMP_FILE`
+            cont=$(grep '已连续登录' $TEMP_FILE)
             reg_cont="(已连续登录.*天)"
             if [[ $cont =~ $reg_cont ]]; then
-                echo "333"
                 printf "${green}签到成功，${BASH_REMATCH[1]}${reset}\n"
                 return 0
             fi
@@ -352,23 +349,27 @@ if [ $? != 0 ]; then
 fi
 
 type http >/dev/null 2>/dev/null
-if [ $? == 0 ]; then
+if [ $? = 0 ]; then
     HTTP=http
 fi
 
 while true
 do
-    UPMODE=`echo $MODE | tr "[:lower:]" "[:upper:]"`
-    if test "$USER_NAME"; then
-        printf "($pink$USER_NAME$reset) $UPMODE # "
+    if [ $# -gt 0 ]; then
+        data=$@
     else
-        printf "$UPMODE # "
+        UPMODE=$(echo $MODE | tr "[:lower:]" "[:upper:]")
+        if test "$USER_NAME"; then
+            printf "($pink$USER_NAME$reset) $UPMODE # "
+        else
+            printf "$UPMODE # "
+        fi
+        read data
+        if ! test "$data"; then
+            continue
+        fi
     fi
-    read data
-    if ! test "$data"; then
-        continue
-    fi
-    op=`echo $data | cut -d " " -f 1`
+    op=$(echo $data | cut -d " " -f 1)
     case "$op" in
         q | quit)
             break
@@ -382,7 +383,7 @@ do
             MODE=$op
             ;;
         cate)
-            name=`echo $data | cut -d " " -f 2`
+            name=$(echo $data | cut -d " " -f 2)
             if [ $name != $op ]; then
                 _categories $name
                 MODE=$op
@@ -394,7 +395,7 @@ do
             if [ $op = "relogin" ]; then
                 _login  1
             else
-                _login 
+                _login
             fi
             if [ $? -eq 0 ]; then
                 MODE="LOGIN"
@@ -404,7 +405,7 @@ do
             _daily
             ;;
         node)
-            node=`echo $data | cut -d " " -f 2`
+            node=$(echo $data | cut -d " " -f 2)
             if [ $node != $op ]; then
                 _topics node $node
                 MODE=$op
@@ -428,4 +429,7 @@ do
             fi
             ;;
     esac
+    if [ $# -gt 0 ]; then
+        break
+    fi
 done
