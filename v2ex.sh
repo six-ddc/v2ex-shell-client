@@ -153,7 +153,6 @@ _replies() {
     id=${ARRAY[$1]}
     if ! test $id; then
         printf "${red}列表序列号越界${reset}\n"
-        _usage
         return
     fi
     replies_tmpfile="$TEMP_FILE.less"
@@ -189,6 +188,33 @@ _replies() {
 _sel() {
     if [ ${#ARRAY[@]} -gt 0 ]; then
         _replies $1
+    else
+        printf "${red}请先获取主题列表${reset}\n"
+        _usage
+    fi
+}
+
+_open() {
+    if [ ${#ARRAY[@]} -gt 0 ]; then
+        id=${ARRAY[$1]}
+        if [ -z $id ]; then
+            printf "${red}列表序列号越界${reset}\n"
+            return
+        fi
+        url="https://www.v2ex.com/t/$id"
+        printf "${green}$url${reset}\n"
+        if [ $(uname) = "Darwin" ]; then
+            open "$url"
+        else
+            # 暂不清楚桌面环境linux是否可行
+            if [ -n $BROWSER ]; then
+                $BROWSER "$url"
+            elif which xdg-open >/dev/null 2>&1; then
+                xdg-open "$url"
+            elif which gnome-open >/dev/null 2>&1; then
+                gnome-open "$url"
+            fi
+        fi
     else
         printf "${red}请先获取主题列表${reset}\n"
         _usage
@@ -336,6 +362,7 @@ _usage() {
     cate <catename> | 获取指定分类的主题<tech|creative|play|apple|jobs|deals|city|qna|hot|all|r2|nodes|members>
     node <nodename> | 获取节点的主题
     <num>           | 查看指定主题序号的所有回复
+    open <num>      | 使用默认浏览器查看指定主题贴
     help            | 查看帮助
     q|quit          | 退出
 ---------------------------------------------------------------------------------------------------------------
@@ -411,6 +438,15 @@ do
                 MODE=$op
             else
                 printf "${red}使用node <nodename>格式${reset}\n"
+            fi
+            ;;
+        open)
+            idx=$(echo $data | cut -d " " -f 2)
+            if [ $idx != $op ]; then
+                _open $idx
+                MODE=$op
+            else
+                printf "${red}使用open <num>格式${reset}\n"
             fi
             ;;
         help)

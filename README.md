@@ -33,6 +33,7 @@ NONE # help
     cate <catename> | 获取指定分类的主题<tech|creative|play|apple|jobs|deals|city|qna|hot|all|r2|nodes|members>
     node <nodename> | 获取节点的主题
     <num>           | 查看指定主题序号的所有回复
+    open <num>      | 使用默认浏览器查看指定主题贴
     help            | 查看帮助
     q|quit          | 退出
 ---------------------------------------------------------------------------------------------------------------
