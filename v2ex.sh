@@ -236,6 +236,9 @@ _login() {
             curl -s -o $TEMP_FILE -c $COOKIE_FILE -b $COOKIE_FILE $v2ex_sign
         fi
     fi
+    USER_KEY=$(grep -oE 'type="text".*[a-z0-9]{64}' $TEMP_FILE | grep -oE '[a-z0-9]{64}')
+    PASS_KEY=$(grep -oE 'type="password".*[a-z0-9]{64}' $TEMP_FILE | grep -oE '[a-z0-9]{64}')
+    # printf "$USER_KEY,$PASS_KEY\n"
     grep '登出' $TEMP_FILE > /dev/null
     if [ $? != 0 ]; then
         once=$(grep 'name="once"' $TEMP_FILE)
@@ -248,9 +251,9 @@ _login() {
             read -s password
             printf "\n"
             if test "$HTTP"; then
-                $HTTP --session v2ex -f POST $v2ex_sign u=${username} p=${password} once=${once} next=/ Referer:$v2ex_sign > $TEMP_FILE
+                $HTTP --session v2ex -f POST $v2ex_sign $USER_KEY=${username} $PASS_KEY=${password} once=${once} next=/ Referer:$v2ex_sign > $TEMP_FILE
             else
-                curl -s -o $TEMP_FILE -c $COOKIE_FILE -b $COOKIE_FILE -d "u=${username}&p=${password}&once=${once}&next=/" -e "$v2ex_sign" $v2ex_sign
+                curl -s -o $TEMP_FILE -c $COOKIE_FILE -b $COOKIE_FILE -d "$USER_KEY=${username}&$PASS_KEY=${password}&once=${once}&next=/" -e "$v2ex_sign" $v2ex_sign
             fi
             grep '用户名和密码无法匹配' $TEMP_FILE > /dev/null
             if [ $? -eq 0 ]; then
