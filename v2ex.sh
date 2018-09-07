@@ -33,6 +33,7 @@ MODE="none"
 ARRAY=()
 RRAY_TITLE=()
 ARRAY_CONTENT=()
+ARRAY_URL=()
 
 TEMP_FILE="/tmp/ddc.v2ex.shell.tmp"
 COOKIE_FILE="cookie.jar"
@@ -65,11 +66,14 @@ _topics() {
     ARRAY=()
     ARRAY_TITLE=()
     ARRAY_CONTENT=()
+    ARRAY_URL=()
+    echo $TEMP_FILE
     for((i = 0; i < $LENGTH; i++))
     do
         # 替换百分号可能引起的printf输出异常，只能在jq后解析，而不能单独通过echo解析
         title=$(jq -r ".[$i].title" $TEMP_FILE | sed "s/\%/\%\%/g")
         content=$(jq -r ".[$i].content" $TEMP_FILE | sed "s/\%/\%\%/g")
+        url=$(jq -r ".[$i].url" $TEMP_FILE)
         member=$(jq -r ".[$i].member.username" $TEMP_FILE)
         node_title=$(jq -r ".[$i].node.title" $TEMP_FILE | sed "s/\%/\%\%/g")
         replies=$(jq -r ".[$i].replies" $TEMP_FILE)
@@ -78,6 +82,7 @@ _topics() {
         ARRAY[$(($i+1))]=$id
         ARRAY_TITLE[$(($i+1))]="$title"
         ARRAY_CONTENT[$(($i+1))]="$content"
+        ARRAY_URL[$(($i+1))]="$url"
         printf "%2d. $title\n" "$(($i+1))"
     done
     # echo ${ARRAY[@]}
@@ -120,6 +125,7 @@ _categories() {
     ARRAY=()
     ARRAY_TITLE=()
     ARRAY_CONTENT=()
+    ARRAY_URL=()
     i=1
     while read line
     do
@@ -133,6 +139,7 @@ _categories() {
             fi
             title=$(jq -r ".[0].title" $TEMP_FILE | sed "s/\%/\%\%/g")
             content=$(jq -r ".[0].content" $TEMP_FILE | sed "s/\%/\%\%/g")
+            url=$(jq -r ".[0].url" $TEMP_FILE)
             member=$(jq -r ".[0].member.username" $TEMP_FILE)
             node_title=$(jq -r ".[0].node.title" $TEMP_FILE | sed "s/\%/\%\%/g")
             replies=$(jq -r ".[0].replies" $TEMP_FILE)
@@ -140,6 +147,7 @@ _categories() {
             ARRAY[$i]=$id
             ARRAY_TITLE[$i]="$title"
             ARRAY_CONTENT[$i]="$content"
+            ARRAY_URL[$i]="$url"
             printf "%2d. $title\n" "$i"
             i=$(($i+1))
             if [ $i -gt 10 ]; then
@@ -156,7 +164,7 @@ _replies() {
         return
     fi
     replies_tmpfile="$TEMP_FILE.less"
-    printf "${ARRAY_TITLE[$1]}\n${green}${ARRAY_CONTENT[$1]}${reset}\n" > $replies_tmpfile
+    printf "${ARRAY_TITLE[$1]} ${ARRAY_URL[$1]}\n${green}${ARRAY_CONTENT[$1]}${reset}\n" > $replies_tmpfile
     if test "$HTTP"; then
         $HTTP -f GET "https://www.v2ex.com/api/replies/show.json?topic_id=$id" > $TEMP_FILE
     else
@@ -175,7 +183,7 @@ _replies() {
         _date $created
         created=$RET
         id=$(jq -r ".[$i].member.id" $TEMP_FILE)
-        if [ $thanks != "0" ]; then
+        if [[ $thanks != "0" && $thanks != "null" ]]; then
             printf "\n${blue}%3dL${reset}. $pink$member$reset $cyan$created$reset ♥️ $RED$thanks$reset\n${green}$content${reset}\n" "$(($i+1))" >> $replies_tmpfile
         else
             printf "\n${blue}%3dL${reset}. $pink$member$reset $cyan$created$reset\n${green}$content${reset}\n" "$(($i+1))" >> $replies_tmpfile
